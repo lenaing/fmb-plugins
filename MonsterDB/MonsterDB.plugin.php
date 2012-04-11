@@ -128,6 +128,15 @@ class MonsterDB extends DBPlugin
                 '@@ '.$searchQuery.' ';
     }
 
+    public function getSQLIntervalString($startEpoch, $endEpoch)
+    {
+        /* Todo : specific to Postgresql */
+        $periodString = 'BETWEEN to_timestamp('.$startEpoch.')';
+        $periodString .= ' AND to_timestamp('.$endEpoch.')';
+        return $periodString;
+    }
+
+
     /**
      * Retrieve last SQL query result.
      * @return Last SQL query result or <b>NULL</b> if error.
