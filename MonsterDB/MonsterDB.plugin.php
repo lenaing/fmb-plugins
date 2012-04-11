@@ -136,6 +136,15 @@ class MonsterDB extends DBPlugin
         return $periodString;
     }
 
+    public function getSQLExtractString($what, $column)
+    {
+        return 'EXTRACT('.$what.' FROM '.$column.')';
+    }
+
+    public function getBooleanValueFromSQL($SQLBoolean)
+    {
+        return ('t' == $SQLBoolean);
+    }
 
     /**
      * Retrieve last SQL query result.
