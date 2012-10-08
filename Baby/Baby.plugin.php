@@ -242,51 +242,51 @@ class Baby extends Plugin
         $smilies = array (
             // :), :-)
             '`(?<!\\\\)\:-?\)`si'
-                => '<img src="'.$this->imgURL.'"/blog/images/smilies/smile.png" alt=":)" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/smile.png" alt=":)" />',
 
             // :(, :-(
             '`(?<!\\\\)\:-?\(`si'
-                => '<img src="'.$this->imgURL.'"/blog/images/smilies/sad.png" alt=":(" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/sad.png" alt=":(" />',
 
             // :|, :-|
             '`(?<!\\\\)\:-?\|`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/neutral.png" alt=":|" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/neutral.png" alt=":|" />',
 
             // ;), ;-)
             '`(?<!\\\\);-?\)`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/wink.png" alt=";)" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/wink.png" alt=";)" />',
 
             // :p, :P, :-p, :-P
             '`(?<!\\\\)\:-?p`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/tongue.png" alt=":P" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/tongue.png" alt=":P" />',
 
             // :d, :D, :-d, :-D
             '`(?<!\\\\)\:-?d`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/lol.png" alt=":D" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/lol.png" alt=":D" />',
 
             // :o, :O, :-o, :-O
             '`(?<!\\\\)\:-o`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/omg.png" alt=":-O" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/omg.png" alt=":-O" />',
 
             // :cry:, :'(, :'-(
             '`(?<!\\\\)\:cry\:|\:\'-?\(`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/cry.png" alt=":cry:" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/cry.png" alt=":cry:" />',
 
             // ^^, ^_^
             '`(?<!\\\\)\^(\_|\.)?\^`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/happy.png" alt="^_^" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/happy.png" alt="^_^" />',
 
             // o_O, O_o
             '`(?<!\\\\)o\_o`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/dizzy.png" alt="o_O" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/dizzy.png" alt="o_O" />',
 
             // :-/
             '`(?<!\\\\)\:-/`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/confused.png" alt=":-/" />',
+                => '<img src="'.$this->imgURL.'blog/images/smilies/confused.png" alt=":-/" />',
 
             // ><, >_<, >.<
             '`(?<!\\\\)\&gt;(\_|\.)?\&lt;`si'
-                => '<img src="'.$this->imgURL.'/blog/images/smilies/caca.png" alt="o_O" />'
+                => '<img src="'.$this->imgURL.'blog/images/smilies/caca.png" alt="o_O" />'
         );
         
         return preg_replace(array_keys($smilies), array_values($smilies), $text);
