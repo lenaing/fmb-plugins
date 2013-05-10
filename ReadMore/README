@@ -1,0 +1,7 @@
+In order to properly use this plugin, you will have to alter the database.
+
+Here is the SQL query to execute:
+
+update fmb_blog_posts set post_body = post_body||E'\r\n'||'[more]'||E'\r\n'||post_more;
+
+Then you will have to use an alternate template that handle this plugin.
