@@ -8,19 +8,14 @@ Core::loadFile('src/plugins/Plugin.class.php');
 class ReadMore extends Plugin
 {
 
-    private $imgURL;
-    private $playerURL;
-
     public function init()
     {
-        global $fmbConf;
-        
         $fmbPluginEngine = PluginEngine::getInstance();
-        $fmbPluginEngine->setHook('format', 'ReadMore', 'readmore');
+        $fmbPluginEngine->setHook('format', 'ReadMore', 'format');
         return true;
     }
 
-    function readmore($params)
+    function format($params)
     {
         if (!isset($_GET['page']) && !isset($_GET['id'])) {
             if (($p = strpos($params[0], '[more]')) !== false) {
