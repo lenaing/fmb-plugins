@@ -17,7 +17,7 @@ class ReadMore extends Plugin
 
     function format($params)
     {
-        if (!isset($_GET['page']) && !isset($_GET['id'])) {
+        if ((!isset($_GET['page']) && !isset($_GET['id'])) || (isset($_GET['page']) && $_GET['page'] != "post")) {
             if (($p = strpos($params[0], '[more]')) !== false) {
                 return substr($params[0], 0, $p);
             }
