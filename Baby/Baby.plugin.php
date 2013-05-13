@@ -127,7 +127,7 @@ class Baby extends Plugin
 
             // [code]
             '/(?<!\\\\)\[code(?::\w+)?=(?:&quot;|"|\')?(.*?)["\']?(?:&quot;|"|\')?\](.*?)\[\/code\]/si'
-                => '<pre>\\2</pre>',
+                => '<pre><code>\\2</code></pre>',
         );
     
         $preg = array(
