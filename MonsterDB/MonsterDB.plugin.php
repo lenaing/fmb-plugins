@@ -39,6 +39,22 @@ class MonsterDB extends DBPlugin
     // DBPlugin interface methods.----------------------------------------------
     public function query($query, $values, $type)
     {
+        $mem = PluginEngine::getCachingPlugin();
+        $cache = false;
+        $key = "";
+        if (null != $mem) {
+            if (0 == strncasecmp($query, "SELECT", 6)) {
+                $cache = true;
+                $key = md5($query.implode(" ",$values));
+                $tmp = $mem->get($key);
+                if (null != $tmp) {
+                    $this->_result = $tmp;
+                    return true;
+                }
+            } else {
+                $mem->flushdb();
+            }
+        }
         MonsterDB::$sqlQueries++;
         switch ($type)
         {
@@ -74,7 +90,7 @@ class MonsterDB extends DBPlugin
                         $st->free();
                     }
                 } else {
-                    $this->result = $this->_db->queryRow($query);
+                    $this->_result = $this->_db->queryRow($query);
                 }
             } break;
 
@@ -101,6 +117,10 @@ class MonsterDB extends DBPlugin
         if (MDB2::isError($this->_result)) {
             $this->_error = $this->_result->getMessage();
             return false;
+        }
+
+        if ($cache) {
+            $mem->set($key, $this->_result, "db", 300);
         }
 
         return true;
