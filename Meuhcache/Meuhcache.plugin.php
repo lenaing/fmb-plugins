@@ -17,6 +17,10 @@ class Meuhcache extends CachingPlugin
     public function init()
     {
         global $fmbConf;
+
+        if(!class_exists('Memcache')){
+            return false;
+        }
         
         $host = $fmbConf['meuhcache']['server'];
         $port  = $fmbConf['meuhcache']['port'];
