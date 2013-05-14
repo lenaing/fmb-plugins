@@ -1,0 +1,29 @@
+Daddy is a more advanced bbcode parser using bbcode_parser.
+http://christian-seiler.de/projekte/php/bbcode/index_en.html
+
+It is adapted from flatpress' bbcode plugin:
+http://wiki.flatpress.org/doc:plugins:bbcode
+
+Available options are:
+
+$fmbConf['daddy']['attach_dir'] // where the files are stored
+$fmbConf['daddy']['images_dir'] // wherre the images are stored
+$fmbConf['daddy']['url_maxlen'] // split long URLs
+$fmbConf['daddy']['remap']      // regular expression if you'd like to remap URLS
+$fmbConf['daddy']['catch']      // element of the previous expression to catch
+
+Default:
+
+$fmbConf['daddy']['images_dir'] = $fmbConf['site']['url']."images/";
+$fmbConf['daddy']['attach_dir'] = $fmbConf['site']['url']."files/";
+$fmbConf['daddy']['url_maxlen'] = 80;
+
+The remap option allows you to remap local URLS so you can use the thumb plugin.
+
+Example:
+
+$fmbConf['daddy']['remap'] = "^(https?://)?(www\.)?domain.tld/?(.*)$";
+$fmbConf['daddy']['catch'] = 3;
+
+This will catch the 3rd element so the path of image will be local.
+Note: The remapping only works for the [img] tag.
