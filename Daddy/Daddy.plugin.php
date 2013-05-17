@@ -236,19 +236,15 @@ class Daddy extends Plugin
     private function daddy_toolbar() {
         $tpl = PluginEngine::getTemplatePlugin();
         // get all available images
-/*
-        $indexer = new fs_filelister(IMAGES_DIR);
-        $imageslist = $indexer->getList();
+        $images_dir = isset($fmbConf['daddy']['images_dir']) ? $fmbConf['daddy']['images_dir'] : 'images/';
+        $attach_dir = isset($fmbConf['daddy']['attach_dir']) ? $fmbConf['daddy']['attach_dir'] : 'files/';
+
+        $imageslist = $this->utils_listdir($images_dir);
         array_unshift($imageslist, '--');
-        $_FP_SMARTY->assign('images_list', $imageslist);
-        // get all available attachements
-        $indexer = new fs_filelister(ATTACHS_DIR);
-        $attachslist = $indexer->getList();
+
+        $attachslist = $this->utils_listdir($attach_dir);
         array_unshift($attachslist, '--');
-        $_FP_SMARTY->assign('attachs_list', $attachslist);
-        // DMKE: does not work
-        #$bblang = lang_load('plugin:bbcode');
-        #$_FP_SMARTY->assign('bblang', $bblang);
+/*
         echo "<!-- bbcode plugin -->\n";
         echo '<script type="text/javascript" src="'. plugin_geturl('bbcode') .'res/editor.js"></script>'."\n";
         echo $_FP_SMARTY->fetch('plugin:bbcode/toolbar');
@@ -304,42 +300,106 @@ class Daddy extends Plugin
         return $arr;
     }   
 
+    function utils_listdir($dir) {
+        $array_items = array();
+        if ($handle = opendir($dir)) {
+            while (false !== ($file = readdir($handle))) {
+                if ($file != '.' && $file != '..') {
+                    if (is_dir($dir. "/" . $file)) {
+                        $array_items = array_merge($array_items, $this->utils_listdir($dir. '/' . $file));
+                    } else {
+                        $file = $dir . '/' . $file;
+                        $file = preg_replace('/\/\//si', '/', $file);
+                        $file = preg_replace('#'.FMB_PATH.'#si', '', $file);
+                        $array_items[] = $file;
+                    }
+                }
+            }
+            closedir($handle);
+        }
+        return $array_items;
+    }
+
     /**
      * Remaps the URL so that there's no hint to your attachs/ directory.
      *
      * @param string $d
      * @return boolean
      */
-    function daddy_remap_url(&$d) {
+    function daddy_remap_url(&$d, &$h = null) {
         // NWM: "attachs/" is interpreted as a keyword, and it is translated to the actual path of ATTACHS_DIR
-        // CHANGE! we use the getfile.php script to mask the actual path of the attachs dir!
-        // DMKE: I got an idea about an integer-id based download/media manager... work-in-progress
         global $fmbConf;
 
-        $images_dir = isset($fmbConf['daddy']['images_dir']) ? $fmbConf['daddy']['images_dir'] : $fmbConf['site']['url'].'images/';
-        $attach_dir = isset($fmbConf['daddy']['attach_dir']) ? $fmbConf['daddy']['attach_dir'] : $fmbConf['site']['url'].'files/';
-    
+        $images_dir = isset($fmbConf['daddy']['images_dir']) ? $fmbConf['daddy']['images_dir'] : 'images/';
+        $attach_dir = isset($fmbConf['daddy']['attach_dir']) ? $fmbConf['daddy']['attach_dir'] : 'files/';
+        $use_handler = isset($fmbConf['daddy']['use_handler']) ? $fmbConf['daddy']['use_handler'] : false;
+        $file = $fmbConf['daddy']['rewrite_handler'];
+        $lpath = preg_replace('#'.FMB_PATH.'#si', '', dirname(__FILE__));
+
+        if (isset($fmbConf['daddy']['remap']) && isset($fmbConf['daddy']['catch'])) {
+            $m = $fmbConf['daddy']['remap']; 
+            if (preg_match("#$m#", $d, $catch)) {
+                $d = $catch[$fmbConf['daddy']['catch']];
+            }
+        }
+
         if (strpos($d, ':') === false) {
             // if is relative url
             // absolute path, relative to this server
             if ($d[0] == '/') {
                 /*
-                    BLOG_BASEURL contains a trailing slash in the end. If
-                    $d begins with a slash, we first strip it otherwise
-                    the string would look like 
-                    http://mysite.com/flatpress//path/you/entered
-                                               ^^ ugly double slash :P
+                    If $d begins with a slash, we first 
+                    strip it otherwise the string would
+                    look like 
+                    http://mysite.com//path/you/entered
+                                     ^^ ugly double slash :P
                 */
                 $d = $fmbConf['site']['url'] . substr($d, 1);
             }
             if (substr($d, 0, 8) == 'attachs/') {
-                $d = substr_replace ($d, $attach_dir, 0, 8 );
+                if ($use_handler || $attach_dir[0] == '/') {
+                    if (isset($file)) {
+                        $file = str_replace('%f', substr($d, 8), $file);
+                    } else {
+                        $file = $lpath.'/getfile.php?f='.substr($d, 8);
+                    }
+                    $d = $file;
+                } else {
+                    $d = substr_replace ($d, $attach_dir, 0, 8 );
+                }
+                return true;
+            }
+            if ($use_handler && strncmp($d, $attach_dir, strlen($attach_dir)) == 0) {
+                if (isset($file)) {
+                    $file = str_replace('%f', substr($d, strlen($attach_dir)), $file);
+                } else {
+                    $file = $lpath.'/getfile.php?f='.substr($d, strlen($attach_dir));
+                }
+                $d = $file;
                 return true;
             }
             if (substr($d, 0, 7) == 'images/') {
-                $d = substr_replace ($d, $images_dir, 0, 7 );
+                if ($use_handler || $images_dir[0] == '/') {
+                    if (isset($file)) {
+                        $file = str_replace('%f', substr($d, 0, 7), $file);
+                    } else {
+                        $file = $lpath.'/getfile.php?f='.substr($d, 0, 7);
+                    }
+                    $h = $file.'&amp;t=i';
+                } else {
+                    $d = substr_replace ($d, $images_dir, 0, 7 );
+                }
+                return true;
             }
-            return true;
+            if ($use_handler && strncmp($d, $images_dir, strlen($images_dir)) == 0) {
+                    if (isset($file)) {
+                        $file = str_replace('%f', substr($d, strlen($images_dir)), $file);
+                    } else {
+                        $file = $lpath.'/getfile.php?f='.substr($d, strlen($images_dir));
+                    }
+                $h = $file.'&amp;t=i';
+                return true;
+            }
         }
         if (strpos($d, 'www.') === 0) {
             $d = 'http://' . $d;
@@ -366,7 +426,7 @@ class Daddy extends Plugin
     
         // the code was specified as follows: [url]http://.../[/url]
         if (!isset ($attributes['default'])) {
-            // cut url if longer than > BBCODE_URL_MAXLEN
+            // cut url if longer than > URL_MAXLEN
             $url = $content;
             if (($l = strlen($url)) > $url_maxlen) {
                 $t = (int)($url_maxlen / 2);
@@ -380,8 +440,6 @@ class Daddy extends Plugin
         $the_url = $local
             ? ($fmbConf['site']['url'] . $url)
             : $url;
-        // DMKE: uh?
-        $content = $content; 
         $rel = isset($attributes['rel'])
             ? ' rel="' . $attributes['rel'] . '"'
             : '';
@@ -412,17 +470,12 @@ class Daddy extends Plugin
             $path = $content;
         }
         $remap = false;
-        if (isset($fmbConf['daddy']['remap']) && isset($fmbConf['daddy']['catch'])) {
-            $m = '^(https?://)?(www.)?ziirish\.info/?(.+)$';
-            if (preg_match("#$m#", $path, $catch)) {
-                $path = $catch[$fmbConf['daddy']['catch']];
-                $remap = true;
-            }
-        }
+        $handle = null;
 
         $absolutepath = $actualpath = $path;
         // NWM: "images/" is interpreted as a keyword, and it is translated to the actual path of IMAGES_DIR
-        $image_is_local = Daddy::daddy_remap_url($actualpath);
+        $image_is_local = Daddy::daddy_remap_url($actualpath, $handle);
+        $remap = $actualpath != $path;
         $float = ' class="center" ';
         $popup_start = '';
         $popup_end = '';
@@ -431,12 +484,12 @@ class Daddy extends Plugin
         $useimageinfo = true; // use IPTC info
 
         if (isset($attributes['alt'])) {
-            $alt = htmlentities($attributes['alt']);
+            $alt = htmlspecialchars($attributes['alt']);
             $useimageinfo = false;
         }
 
         if (isset($attributes['title'])) {
-            $title = htmlentities($attributes['title']);
+            $title = htmlspecialchars($attributes['title']);
             $useimageinfo = false;
         }
         
@@ -458,8 +511,8 @@ class Daddy extends Plugin
                     
                     if(is_array($img_info)) {   
                         $iptc = iptcparse($img_info["APP13"]);
-                        $title = @$iptc["2#005"][0]? htmlentities($iptc["2#005"][0]) : $title;
-                        $alt = isset($iptc["2#120"][0])? htmlentities($iptc["2#120"][0],1) : $title;
+                        $title = @$iptc["2#005"][0]? htmlspecialchars($iptc["2#005"][0]) : $title;
+                        $alt = isset($iptc["2#120"][0])? htmlspecialchars($iptc["2#120"][0],1) : $title;
                     }  
                 
                 }
@@ -543,7 +596,7 @@ class Daddy extends Plugin
             $popup = $slimfast->popup($attributes['rel'], $alt, $title); 
         }
         if (null != $popup) {
-            $popup_start = '<a title="'. $title .'" href="'. $absolutepath .'"'. $popup .'>';
+            $popup_start = '<a title="'. $title .'" href="'. (null != $handle ? $fmbConf['site']['url'].$handle : $absolutepath) .'"'. $popup .'>';
             $popup_end = '</a>';
         }
 
@@ -559,8 +612,8 @@ class Daddy extends Plugin
                 : ' class="center"';
         }
         $src = $thumbpath
-            ? ($fmbConf['site']['url'] . $thumbpath)
-            : $absolutepath; // $attributes['default'])
+            ? ($fmbConf['site']['url'] . null != $handle ? $fmbConf['site']['url'].$handle.'&amp;thumb' : $thumbpath)
+            : (null != $handle ? $handle : $absolutepath); // $attributes['default'])
         $pop = $popup_start
             ? ''
             : ' title="'.$title.'" ';
@@ -653,6 +706,9 @@ class Daddy extends Plugin
         if ($a) {
             $a = ' class="'. $a .'"';
         }
+        if (isset($attributes['default']) && strcasecmp($attributes['default'],'html') == 0 || strcasecmp($attributes['default'],'php') == 0) {
+            return Daddy::do_daddy_html($action, $attributes, $content, $params, $node_object);
+        }
         return '<pre><code'. $a .'>'. $temp_str .'</code></pre>';
     }
 
@@ -670,7 +726,7 @@ class Daddy extends Plugin
         if ($action == 'validate') {
             return true;
         }
-        return htmlentities($str);
+        return '<pre><code class="html">'.htmlspecialchars($content).'</code></pre>';
     }
 
     /**
