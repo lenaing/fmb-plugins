@@ -1,0 +1,22 @@
+Highlightjs allows you to enable syntax highlighting.
+Your code must be sorrounded by the "<pre><code>" tags.
+
+By default highlighjs tries to autodetext the laguage, but you can force it
+using the "class" attribute of the <code> tag.
+
+Example:
+
+<pre><code class="C">
+#include <stdio.h>
+
+int main (int argc, char **argv) {
+    fprintf (stdout, "Hello World!\n");
+    return 0;
+}
+</code></pre>
+
+There are multiple themes available, take a look at the highlight.js/styles
+directory.
+To use a specific theme, you can set the following option in your config file:
+
+$fmbConf['highlightjs']['theme'] = 'github';

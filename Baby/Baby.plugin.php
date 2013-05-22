@@ -25,7 +25,21 @@ class Baby extends Plugin
 
     function format($params)
     {
-        return $this->bbcode2html($params[0], $params[1]);
+
+        $mem = PluginEngine::getCachingPlugin();
+        if (null != $mem) {
+            $key = md5($params[0]);
+            $res = $mem->get($key);
+            if (null == $res) {
+//                $res = $this->bbcode2html($params[0], $params[1]);
+                $res = $this->extnl2br($params[0]);
+                $mem->set($key, $res);
+            }
+            return $res;
+        }
+//        return $this->bbcode2html($params[0], $params[1]);
+
+        return $this->extnl2br($params[0]);
     }
 
     function bbcode2html($text, $full=false)

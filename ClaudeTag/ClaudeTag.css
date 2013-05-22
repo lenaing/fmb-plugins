@@ -1,0 +1,21 @@
+#exttags {
+    border: 1px dashed;
+}
+
+#exttags .exttag {
+    border-left: 0px;
+    padding: 0px;
+    display: inline;
+}
+
+#exttags li {
+    display: inline;
+}
+
+#exttags li:before {
+    content:" ";
+}
+
+#exttags li:first-child:before {
+    content:"";
+}
