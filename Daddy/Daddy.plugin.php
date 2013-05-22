@@ -156,7 +156,7 @@ class Daddy extends Plugin
             'Daddy::do_daddy_img', 
             array(
                 'usecontent_param' => array(
-                    'default', 'float', 'alt', 'popup', 'width', 'height', 'title', 'rel'
+                    'default', 'float', 'alt', 'popup', 'width', 'height', 'title', 'rel', 'cache'
                 )
             ),
             'image',
@@ -320,6 +320,80 @@ class Daddy extends Plugin
         return $array_items;
     }
 
+    function cacheid2path($id) {
+        return dirname(__FILE__).'/cache/'.substr($id,0,2).'/'.substr($id,2,2).'/';
+    }
+
+    function daddy_retrieve_image(&$d, &$h = null) {
+        global $fmbConf;
+        $images_dir = isset($fmbConf['daddy']['images_dir']) ? $fmbConf['daddy']['images_dir'] : 'images/';
+        $use_handler = isset($fmbConf['daddy']['use_handler']) ? $fmbConf['daddy']['use_handler'] : false;
+        $lpath = preg_replace('#'.FMB_PATH.'#si', '', dirname(__FILE__));
+        $file = $fmbConf['daddy']['rewrite_handler'];
+        $md5 = hash('md5', $d);
+        $cacheid = substr($md5, 0, 16);
+        $storagedir = Daddy::cacheid2path($cacheid);
+
+        if (!is_dir($storagedir)) mkdir($storagedir, 0705, true);
+        if (is_file($storagedir.$cacheid))
+        {
+            $data = json_decode(file_get_contents($storagedir.$cacheid));
+            if (0 != strcmp($data->md5, $md5)) {
+                // Oups... improbable collision.
+                return false;
+            } else if ($data->ok) {
+                $d = $data->path;
+                $h = $data->handle;
+                return true;
+            } else if ($data->last > (time()-(24*3600))) {
+                // Only try to get the file once a day
+                return false;
+            }
+        }
+        list($httpstatus, $headers, $image) = Daddy::getHTTP($d);
+        $ret = false;
+        if (false === strpos($httpstatus,'200 OK')) {
+            $data = array('md5'=>$md5, 'last'=>time(), 'ok'=>false);
+        } else {
+            $ret = true;
+            $f = basename($d);
+
+            if ($use_handler || $images_dir[0] == '/') {
+                if (isset($file)) {
+                    $file = str_replace('%f', $f, $file);
+                } else {
+                    $file = $lpath.'/getfile.php?f='.$f;
+                }    
+                $h = $file.'&amp;t=i';
+            }
+
+            $d = $images_dir.'/'.$f;
+
+            if ($d[0] == '/') {
+                $tmp = $d;
+            } else {
+                $tmp = FMB_PATH.$d;
+            }
+
+            while (is_file($tmp)) {
+                $uniq = uniqid();
+                $d = $images_dir.'/'.$uniq.'-'.$f;
+                if ($d[0] == '/') {
+                    $tmp = $d;
+                } else {
+                    $tmp = FMB_PATH.$d;
+                }
+            }
+
+            file_put_contents($tmp, $image);
+
+            $data = array('path'=>$d, 'handle'=>$h, 'md5'=>$md5, 'last'=>time(), 'ok'=>true);
+        }
+        // New cache
+        file_put_contents($storagedir.$cacheid,json_encode($data));
+        return $ret;
+    }
+
     /**
      * Remaps the URL so that there's no hint to your attachs/ directory.
      *
@@ -407,6 +481,53 @@ class Daddy extends Plugin
         return false;
     }
 
+    // Parse HTTP response headers and return an associative array.
+    function http_parse_headers( $headers )
+    {
+        $res=array();
+        foreach($headers as $header)
+        {
+            $i = strpos($header,': ');
+            if ($i!==false)
+            {
+                $key=substr($header,0,$i);
+                $value=substr($header,$i+2,strlen($header)-$i-2);
+                $res[$key]=$value;
+            }
+        }
+        return $res;
+    }
+
+    /* GET an URL.
+       Input: $url : url to get (http://...)
+              $timeout : Network timeout (will wait this many seconds for an anwser before giving up).
+       Output: An array.  [0] = HTTP status message (eg. "HTTP/1.1 200 OK") or error message
+                          [1] = associative array containing HTTP response headers (eg. echo getHTTP($url)[1]['Content-Type'])
+                          [2] = data
+        Example: list($httpstatus,$headers,$data) = getHTTP('http://sebauvage.net/');
+                 if (strpos($httpstatus,'200 OK')!==false)
+                     echo 'Data type: '.htmlspecialchars($headers['Content-Type']);
+                 else
+                     echo 'There was an error: '.htmlspecialchars($httpstatus)
+    */
+    function getHTTP($url,$timeout=30)
+    {
+        try
+        {  
+            $options = array('http'=>array('method'=>'GET','timeout' => $timeout)); // Force network timeout
+            $context = stream_context_create($options);
+            $data=file_get_contents($url,false,$context,-1, 10000000); // We download at most 10 Mb from source.
+            if (!$data) { return array('HTTP Error',array(),''); }
+            $httpStatus=$http_response_header[0]; // eg. "HTTP/1.1 200 OK"
+            $responseHeaders=Daddy::http_parse_headers($http_response_header);
+            return array($httpStatus,$responseHeaders,$data);
+        }
+        catch (Exception $e)  // getHTTP *can* fail silentely 
+        {  
+            return array($e->getMessage(),'','');
+        }
+    }
+
     /**
      * Function to link documents.
      *
@@ -464,6 +585,7 @@ class Daddy extends Plugin
             return true;
         }
         global $fmbConf;
+        $cache = isset($fmbConf['daddy']['cache_images']) ? $fmbConf['daddy']['cache_images'] : false;
 
         $path = $attributes['default'];
         if (!isset($attributes['default'])) {
@@ -475,7 +597,6 @@ class Daddy extends Plugin
         $absolutepath = $actualpath = $path;
         // NWM: "images/" is interpreted as a keyword, and it is translated to the actual path of IMAGES_DIR
         $image_is_local = Daddy::daddy_remap_url($actualpath, $handle);
-        $remap = $actualpath != $path;
         $float = ' class="center" ';
         $popup_start = '';
         $popup_end = '';
@@ -492,13 +613,18 @@ class Daddy extends Plugin
             $title = htmlspecialchars($attributes['title']);
             $useimageinfo = false;
         }
-        
+
+        if (false === $image_is_local && $cache || (isset($attributes['cache']) && strcasecmp($attributes['cache'], 'true') == 0)) {
+            $image_is_local = Daddy::daddy_retrieve_image($actualpath, $handle);
+        }        
+        $remap = $actualpath != $path;
+
         $img_size = array();
         // let's disable socket functions for remote files
         // slow remote servers may otherwise lockup the system
         if ($image_is_local) {
             $img_info = array();
-            if (true === $remap) {
+            if (true === $remap && $actualpath[0] != '/') {
                 $img_size = @getimagesize(FMB_PATH.$actualpath, $img_info);
             } else {
                 $img_size = @getimagesize($actualpath, $img_info);
@@ -567,7 +693,7 @@ class Daddy extends Plugin
             $thumb = PluginEngine::getPlugin('thumb');
             $thumbpath = '';
             if (null != $thumb) {
-                if (true === $remap) {
+                if (true === $remap && $actualpath[0] != '/') {
                     $thumbpath = $thumb->do_thumb(FMB_PATH.$actualpath, $img_size, array($width, $height));
                     $thumbpath = substr($thumbpath,strlen(FMB_PATH));
                 } else {
@@ -694,13 +820,22 @@ class Daddy extends Plugin
             return true;
         }
         $temp_str = $content;
+        $temp_str = str_replace('<', '&lt;', $temp_str);
+        $temp_str = str_replace('>', '&gt;', $temp_str);
         $temp_str = str_replace('<br />', chr(10), $temp_str);
         $temp_str = str_replace(chr(10). chr(10), chr(10), $temp_str);
         $temp_str = str_replace(chr(32), '&nbsp;', $temp_str);
+        
         $a = '';
         if (null != PluginEngine::getPlugin('highlightjs')) {
             if (isset($attributes['default'])) {
                 $a = $attributes['default'];
+                if (strcasecmp($a,'c') == 0) {
+                    $a = 'cpp';
+                }
+                if (strcasecmp($a,'none') == 0) {
+                    $a = 'no-highlight';
+                }
             }
         }
         if ($a) {

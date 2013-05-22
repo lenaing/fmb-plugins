@@ -37,29 +37,29 @@ function insertAtCursor(element, start, end) {
 
 // calling the function
 // insertAtCursor(document.formName.fieldName, ‘this value’);
-function insBBCode(code) {
-	insertAtCursor('content', '[' + code + ']','[/' + code + ']');
+function insBBCode(code, form) {
+	insertAtCursor(form, '[' + code + ']','[/' + code + ']');
 }
 
-function insImage(val) {
+function insImage(val, form) {
 	if (val != '--') {
-		insertAtCursor('content', '[img=images/'+val+']',' ');
+		insertAtCursor(form, '[img=images/'+val+']',' ');
 	}
 }
 
-function insAttach(val) {
+function insAttach(val, form) {
 	if (val !='--') {
-		insertAtCursor('content', '[url=attachs/'+val+']','[/url]');
+		insertAtCursor(form, '[url=attachs/'+val+']','[/url]');
 	}
 }
 
 // if false, tab move to next element
 var bbcode_editmode = true;
 
-function tabKeyOverrider() {
+function tabKeyOverrider(form) {
 	// Observe keypress on these fields
 	if (Event.observe) {
-		Event.observe($('content'), 'keypress', checkTab);
+		Event.observe($(form), 'keypress', checkTab);
 	}
 }
 
