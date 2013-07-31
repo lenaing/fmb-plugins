@@ -1,0 +1,3 @@
+APCache is a plugin used to cache "computed" values using PHP APC.
+It is smart enough to cache SQL results and will be able to clean the cached
+data every time you update your database whithout flushing all the cached data.
