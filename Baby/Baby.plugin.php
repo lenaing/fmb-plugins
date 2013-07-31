@@ -28,7 +28,7 @@ class Baby extends Plugin
 
         $mem = PluginEngine::getCachingPlugin();
         if (null != $mem) {
-            $key = md5($params[0]);
+            $key = md5('Baby'.print_r($params,true));
             $res = $mem->get($key);
             if (null == $res) {
 //                $res = $this->bbcode2html($params[0], $params[1]);
@@ -141,7 +141,7 @@ class Baby extends Plugin
 
             // [code]
             '/(?<!\\\\)\[code(?::\w+)?=(?:&quot;|"|\')?(.*?)["\']?(?:&quot;|"|\')?\](.*?)\[\/code\]/si'
-                => '<pre>\\2</pre>',
+                => '<pre><code>\\2</code></pre>',
         );
     
         $preg = array(
@@ -218,8 +218,8 @@ class Baby extends Plugin
     function extnl2br($text)
     {
         // Check for <pre> tag.
-        if(!strpos($text, '<pre>')) {
-            return nl2br($this->smilies($text));
+        if(!strpos($text, '[code') || !strpos($text, '~~~~')) {
+            return $this->smilies($text);
         }
 
         // Some <pre> tag, start formatting consequently.
@@ -230,21 +230,21 @@ class Baby extends Plugin
 
         foreach($lines as $line) {
 
-            if(strpos($line, '<pre>') !== false) {
+            if(strpos($line, '[code') !== false || strpos($line, '~~~~') !== false) {
                 $isPreFound = true;
             }
             
-            if(strpos($line, '</pre>') !== false) {
+            if($isPreFound && (strpos($line, '[/code]') !== false || strpos($line, '~~~~') !== false)) {
                 
                 $isPreFound = false;
                 $res .= $pre;
                 $pre = "";
             }
 
-            if ($isPreFound) {    
-                $pre .= $line."\n";
+            if (!$isPreFound) {    
+                $res .= $this->smilies($line)."\n";
             } else {
-                $res .= $this->smilies($line).'<br />';
+                $res .= $line."\n";
             }
         }
 
