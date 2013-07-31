@@ -45,7 +45,7 @@ With the 'rewrite_handler' we MUST setup a rewrite rule like this:
 rewrite ^/get-(.+)$ /plugins/Daddy/getfile.php?f=$1;
 
 With 'use_handler' set to 'true', all the links prefixed with 'attachs/' or prefixed with
-$fmbConf['daddy']['attach_dir'] will be passed thru the handler.
+$fmbConf['daddy']['attach_dir'] will be passed through the handler.
 Same with 'images' instead of 'attachs'.
 
 
