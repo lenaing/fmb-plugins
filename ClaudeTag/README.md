@@ -7,7 +7,7 @@ It uses its own template and style sheet so you can adapt it as you want.
 
 Here are the available options:
 
-`` php
+``` php
 $fmbConf['ClaudeTag']['nbtags'] = 30; // number of tags to display
 $fmbConf['ClaudeTag']['sizemin'] = 10; // size of the smallest item
 $fmbConf['ClaudeTag']['sizemax'] = 30; // size of the largest item
