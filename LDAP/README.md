@@ -15,3 +15,12 @@ $fmbConf['ldap']['host'] = 'ldaps://ldap.master.example.org'
 // this option is mendatory. '%u' is replaced by the given username in the login page
 $fmbConf['ldap']['connect_string'] = 'uid=%u,ou=People,dc=example,dc=org'
 ```
+
+# Configuration
+
+In order to enable this plugin, you must edit the following line in your `config.php`:
+
+``` php
+// load 'login' plugins
+$fmbConf['plugins']['login'] = array ('LDAP');
+```
