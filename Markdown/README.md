@@ -24,7 +24,7 @@ int main (int argc, char **argv) {
 
 	return 0;
 }
-~~~~
+~ (4 times)
 
 Some *emphased* text, and some **bold** text.
 ```
