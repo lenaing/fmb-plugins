@@ -1,6 +1,6 @@
 # Description
 
-`jQuery` adds the [jQUery](http://jquery.com/) library to your blog.
+`jQuery` adds the [jQuery](http://jquery.com/) library to your blog.
 
 # Configuration
 
