@@ -41,10 +41,10 @@ class LatexRender {
     var $_xsize_limit = 600;
     var $_ysize_limit = 500;
     var $_string_length_limit = 500;
-	var $_font_size = 10;
-	var $_latexclass = "article"; //install extarticle class if you wish to have smaller font sizes
+    var $_font_size = 10;
+    var $_latexclass = "article"; //install extarticle class if you wish to have smaller font sizes
     var $_tmp_filename;
-	var $_image_format = "gif"; //change to png if you prefer
+    var $_image_format = "gif"; //change to png if you prefer
     // this most certainly needs to be extended. in the long term it is planned to use
     // a positive list for more security. this is hopefully enough for now. i'd be glad
     // to receive more bad tags !
@@ -56,9 +56,9 @@ class LatexRender {
         "\\afterassignment","\\expandafter","\\noexpand","\\special"
         );
     var $_errorcode = 0;
-	var $_errorextra = "";
-	var $_cachefiles = 1;
-	var $_extraname = ""; //adds time to stop images being cached by IE
+    var $_errorextra = "";
+    var $_cachefiles = 1;
+    var $_extraname = ""; //adds time to stop images being cached by IE
 
 
     // ====================================================================================
