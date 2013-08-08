@@ -8,7 +8,7 @@ It is adapted from flatpress' [bbcode plugin](http://wiki.flatpress.org/doc:plug
 
 ``` php
 $fmbConf['daddy']['attach_dir'] // string: where the files are stored
-$fmbConf['daddy']['images_dir'] // string: wherre the images are stored
+$fmbConf['daddy']['images_dir'] // string: where the images are stored
 $fmbConf['daddy']['url_maxlen'] // int: split long URLs
 $fmbConf['daddy']['remap']      // string: regular expression if you'd like to remap URLS
 $fmbConf['daddy']['catch']      // int: element of the previous expression to catch
