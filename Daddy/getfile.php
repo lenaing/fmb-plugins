@@ -4,7 +4,7 @@ use FMB\Core\Core;
 
 global $fmbConf;
 
-if (isset($_GET['f'])) {
+if (isset($_GET['f']) && !preg_match('#(../|./)#', $_GET['f']) && !preg_match('#^/#', $_GET['f'])) {
 
     if (isset($_GET['t']) && $_GET['t'] == 'i') {
         if (isset($_GET['thumb'])) {
@@ -16,9 +16,9 @@ if (isset($_GET['f'])) {
         $tpath = $fmbConf['daddy']['attach_dir'];
     }
     if (substr($tpath, 0, 1) == '/') {
-        $file = $tpath.$_GET['f'];
+        $file = $tpath.'/'.$_GET['f'];
     } else {
-        $file = FMB_PATH.$tpath.$_GET['f'];
+        $file = FMB_PATH.'/'.$tpath.'/'.$_GET['f'];
     }
 
     if (file_exists($file)) {

@@ -142,7 +142,7 @@ class Daddy extends Plugin
             'callback_replace', 
             'Daddy::do_daddy_url', 
             array(
-                'usecontent_param' => array('default', 'new')
+                'usecontent_param' => array('default', 'new', 'noremap')
             ),
             'link',
             array(
@@ -275,7 +275,7 @@ class Daddy extends Plugin
     // the array will look like
     // $arr['key1'] = 'value1'; $arr['key2'] = 'value2'; etc.
     
-    function utils_kexplode($string, $delim='|', $keyupper=true) {
+    static function utils_kexplode($string, $delim='|', $keyupper=true) {
         $arr = array();
         $string = trim($string);
     
@@ -300,7 +300,7 @@ class Daddy extends Plugin
         return $arr;
     }   
 
-    function utils_listdir($dir) {
+    static function utils_listdir($dir) {
         $array_items = array();
         if ($handle = opendir($dir)) {
             while (false !== ($file = readdir($handle))) {
@@ -320,11 +320,11 @@ class Daddy extends Plugin
         return $array_items;
     }
 
-    function cacheid2path($id) {
+    static function cacheid2path($id) {
         return dirname(__FILE__).'/cache/'.substr($id,0,2).'/'.substr($id,2,2).'/';
     }
 
-    function daddy_retrieve_image(&$d, &$h = null) {
+    static function daddy_retrieve_image(&$d, &$h = null) {
         global $fmbConf;
         $images_dir = isset($fmbConf['daddy']['images_dir']) ? $fmbConf['daddy']['images_dir'] : 'images/';
         $use_handler = isset($fmbConf['daddy']['use_handler']) ? $fmbConf['daddy']['use_handler'] : false;
@@ -400,7 +400,7 @@ class Daddy extends Plugin
      * @param string $d
      * @return boolean
      */
-    function daddy_remap_url(&$d, &$h = null) {
+    static function daddy_remap_url(&$d, &$h = null) {
         // NWM: "attachs/" is interpreted as a keyword, and it is translated to the actual path of ATTACHS_DIR
         global $fmbConf;
 
@@ -455,9 +455,9 @@ class Daddy extends Plugin
             if (substr($d, 0, 7) == 'images/') {
                 if ($use_handler || $images_dir[0] == '/') {
                     if (isset($file)) {
-                        $file = str_replace('%f', substr($d, 0, 7), $file);
+                        $file = str_replace('%f', substr($d, 7), $file);
                     } else {
-                        $file = $lpath.'/getfile.php?f='.substr($d, 0, 7);
+                        $file = $lpath.'/getfile.php?f='.substr($d, 7);
                     }
                     $h = $file.'&amp;t=i';
                 } else {
@@ -482,7 +482,7 @@ class Daddy extends Plugin
     }
 
     // Parse HTTP response headers and return an associative array.
-    function http_parse_headers( $headers )
+    static function http_parse_headers( $headers )
     {
         $res=array();
         foreach($headers as $header)
@@ -510,7 +510,7 @@ class Daddy extends Plugin
                  else
                      echo 'There was an error: '.htmlspecialchars($httpstatus)
     */
-    function getHTTP($url,$timeout=30)
+    static function getHTTP($url,$timeout=30)
     {
         try
         {  
@@ -538,7 +538,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_url ($action, $attributes, $content, $params, $node_object) {
+    static function do_daddy_url ($action, $attributes, $content, $params, $node_object) {
         if ($action == 'validate') {
             return true;
         }
@@ -557,7 +557,9 @@ class Daddy extends Plugin
             // else the code was specified as follows: [url=http://.../]Text[/url]
             $url = $attributes['default'];
         }
-        $local = Daddy::daddy_remap_url($url);
+        if (!(isset($attributes['noremap']) && strcasecmp($attributes['noremap'], 'true') == 0)) {
+            $local = Daddy::daddy_remap_url($url);
+        }
         $the_url = $local
             ? ($fmbConf['site']['url'] . $url)
             : $url;
@@ -580,7 +582,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_img($action, $attributes, $content, $params, $node_object) {
+    static function do_daddy_img($action, $attributes, $content, $params, $node_object) {
         if ($action == 'validate') {
             return true;
         }
@@ -757,7 +759,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_video($action, $attr, $content, $params, $node_object) {
+    static function do_daddy_video($action, $attr, $content, $params, $node_object) {
         if ($action == 'validate') {
             return true;
         }
@@ -815,7 +817,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_code ($action, $attributes, $content, $params, $node_object) {
+    static function do_daddy_code ($action, $attributes, $content, $params, $node_object) {
         if ($action == 'validate') {
             return true;
         }
@@ -835,6 +837,9 @@ class Daddy extends Plugin
                 }
                 if (strcasecmp($a,'none') == 0) {
                     $a = 'no-highlight';
+                }
+                if (strcasecmp($a,'shell') == 0) {
+                    $a = 'bash';
                 }
             }
         }
@@ -857,7 +862,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_html ($action, $attributes, $content, $params, $node_object) {
+    static function do_daddy_html ($action, $attributes, $content, $params, $node_object) {
         if ($action == 'validate') {
             return true;
         }
@@ -874,7 +879,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_color ($action, $attributes, $content, $params, $node_object) {
+    static function do_daddy_color ($action, $attributes, $content, $params, $node_object) {
         if ($action == 'validate') {
             return true;
         }
@@ -891,7 +896,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_size ($action, $attributes, $content, $params, $node_object) {
+    static function do_daddy_size ($action, $attributes, $content, $params, $node_object) {
         if ($action == 'validate') {
             return true;
         }
@@ -908,7 +913,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_align($action, $attr, $content, $params, $node_object) {
+    static function do_daddy_align($action, $attr, $content, $params, $node_object) {
         return '<div style="text-align:'. $attr['default'] .'">'. $content .'</div>';
     }
 
@@ -922,7 +927,7 @@ class Daddy extends Plugin
      * @param mixed $node_object Not used
      * @return string
      */
-    function do_daddy_list ($action, $attributes, $content, $params, $node_object) {
+    static function do_daddy_list ($action, $attributes, $content, $params, $node_object) {
         if ($action == 'validate') {
             return true;
         }
@@ -1112,7 +1117,7 @@ class Daddy extends Plugin
     {
         $mem = PluginEngine::getCachingPlugin();
         if (null != $mem) {
-            $key = md5($params[0]);
+            $key = md5('Daddy'.print_r($params,true));
             $res = $mem->get($key);
             if (null == $res) {
                 if (true === $params[1]) {
